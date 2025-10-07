@@ -319,9 +319,22 @@ export default function VictoryPlanner() {
   const totalToday = todayTasks.length;
 
   const getPriorityColor = (priority) => {
-    if (priority === 'high') return '#EF4444';
-    if (priority === 'medium') return '#EAB308';
-    return '#10B981';
+    if (priority === 'high') return '#FF6B6B';
+    if (priority === 'medium') return '#DFFF00';
+    return '#00D100';
+  };
+
+  const getPriorityStyle = (priority) => {
+    return {
+      backgroundColor: getPriorityColor(priority),
+      color: '#6B7280',
+      padding: '4px 12px',
+      borderRadius: '8px',
+      fontSize: '14px',
+      fontWeight: 'bold',
+      textTransform: 'uppercase',
+      letterSpacing: '0.05em'
+    };
   };
 
   return (
@@ -331,40 +344,36 @@ export default function VictoryPlanner() {
     }}>
       <div className="bg-black/30 backdrop-blur-sm border-b border-orange-500/20">
         <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex justify-between items-center">
-            <div className="flex-1">
-              <h1 className="text-4xl font-bold text-center" style={{ 
-                background: 'linear-gradient(to right, #FF6200, #FF8C00)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                letterSpacing: '0.05em'
-              }}>
-                THE VICTORY PLANNER
-              </h1>
-              <p className="text-center text-orange-300 mt-2" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>{formatDate(currentDate)}</p>
-            </div>
-            <div className="flex gap-2">
-              {isGoogleInitialized && (
-                <>
-                  {isGoogleSignedIn ? (
-                    <>
-                      <button onClick={syncFromGoogleCalendar} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:opacity-90 transition-all text-white text-sm font-bold" style={{ backgroundColor: '#10B981' }}>
-                        <CalendarIcon size={16} />
-                        SYNC
-                      </button>
-                      <button onClick={handleGoogleSignOut} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:opacity-90 transition-all text-white text-sm font-bold" style={{ backgroundColor: '#6B7280' }}>
-                        SIGN OUT
-                      </button>
-                    </>
-                  ) : (
-                    <button onClick={handleGoogleSignIn} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:opacity-90 transition-all text-white text-sm font-bold" style={{ backgroundColor: '#FF6200' }}>
-                      <CalendarIcon size={16} />
-                      CONNECT GOOGLE CALENDAR
+          <div className="flex flex-col gap-4">
+            <h1 className="text-3xl md:text-4xl font-bold text-center" style={{ 
+              background: 'linear-gradient(to right, #FF6200, #FF8C00)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              letterSpacing: '0.05em'
+            }}>
+              THE VICTORY PLANNER
+            </h1>
+            <p className="text-center text-orange-300 text-sm md:text-base" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>{formatDate(currentDate)}</p>
+            {isGoogleInitialized && (
+              <div className="flex justify-center gap-2">
+                {isGoogleSignedIn ? (
+                  <>
+                    <button onClick={syncFromGoogleCalendar} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:opacity-90 transition-all text-white text-xs md:text-sm font-bold" style={{ backgroundColor: '#10B981' }}>
+                      <CalendarIcon size={14} />
+                      SYNC
                     </button>
-                  )}
-                </>
-              )}
-            </div>
+                    <button onClick={handleGoogleSignOut} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:opacity-90 transition-all text-white text-xs md:text-sm font-bold" style={{ backgroundColor: '#6B7280' }}>
+                      SIGN OUT
+                    </button>
+                  </>
+                ) : (
+                  <button onClick={handleGoogleSignIn} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:opacity-90 transition-all text-white text-xs md:text-sm font-bold" style={{ backgroundColor: '#FF6200' }}>
+                    <CalendarIcon size={14} />
+                    CONNECT GOOGLE
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -495,7 +504,12 @@ export default function VictoryPlanner() {
                   {todayTasks.map(task => (
                     <div key={task.id} className="flex items-center gap-2 bg-black/20 p-3 rounded-lg">
                       <input type="checkbox" checked={task.completed} onChange={() => toggleTask(task.id)} className="w-5 h-5 rounded" style={{ accentColor: '#FF6200' }} />
-                      <span className={task.completed ? 'line-through text-gray-400' : ''} style={{ textTransform: 'uppercase', letterSpacing: '0.02em' }}>{task.text}</span>
+                      <div className="flex-1 flex items-center gap-2">
+                        <span className={task.completed ? 'line-through text-gray-400' : ''} style={{ textTransform: 'uppercase', letterSpacing: '0.02em' }}>{task.text}</span>
+                        <span style={getPriorityStyle(task.priority)} className="text-xs">
+                          {task.priority}
+                        </span>
+                      </div>
                     </div>
                   ))}
                   {todayTasks.length === 0 && <p className="text-gray-400 text-center py-4">No tasks for today</p>}
@@ -543,16 +557,7 @@ export default function VictoryPlanner() {
                   <div className="flex-1">
                     <p className={`text-lg mb-2 ${task.completed ? 'line-through text-gray-400' : ''}`} style={{ textTransform: 'uppercase', letterSpacing: '0.02em' }}>{task.text}</p>
                     <div className="flex gap-2">
-                      <span style={{ 
-                        backgroundColor: '#6B7280',
-                        color: getPriorityColor(task.priority),
-                        padding: '4px 12px',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        fontWeight: 'bold',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em'
-                      }}>
+                      <span style={getPriorityStyle(task.priority)}>
                         {task.priority}
                       </span>
                       <span style={{ 
