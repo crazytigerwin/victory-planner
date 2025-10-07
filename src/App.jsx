@@ -691,9 +691,30 @@ export default function VictoryPlanner() {
             <div className="space-y-4">
               <h3 className="text-xl font-bold" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>PAST ENTRIES</h3>
               {journalEntries.slice().reverse().map(entry => (
-                <div key={entry.id} className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-orange-500/20">
-                  <p className="text-sm text-orange-300 mb-2">{new Date(entry.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                  <p className="text-white">{entry.text}</p>
+                <div key={entry.id} className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-orange-500/20 cursor-pointer hover:bg-white/20 transition-all group">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1" onClick={() => {
+                      setJournalText(entry.text);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}>
+                      <p className="text-sm font-bold mb-2" style={{ color: '#FF6200', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        {new Date(entry.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase()}
+                      </p>
+                      <p className="text-white line-clamp-3">{entry.text}</p>
+                      <p className="text-orange-300 text-sm mt-2">Click to edit</p>
+                    </div>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (window.confirm('Are you sure you want to delete this journal entry?')) {
+                          setJournalEntries(journalEntries.filter(j => j.id !== entry.id));
+                        }
+                      }} 
+                      className="text-red-400 hover:text-red-300 ml-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  </div>
                 </div>
               ))}
               {journalEntries.length === 0 && <p className="text-gray-400 text-center py-8">No journal entries yet. Start writing!</p>}
