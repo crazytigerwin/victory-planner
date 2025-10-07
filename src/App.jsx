@@ -697,11 +697,11 @@ export default function VictoryPlanner() {
                       setJournalText(entry.text);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}>
-                      <p className="text-sm font-bold mb-2" style={{ color: '#FF6200', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      <p className="text-sm font-bold mb-2" style={{ color: 'white', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         {new Date(entry.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase()}
                       </p>
                       <p className="text-white line-clamp-3">{entry.text}</p>
-                      <p className="text-orange-300 text-sm mt-2">Click to edit</p>
+                      <p className="text-white font-bold text-sm mt-2" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>CLICK TO EDIT</p>
                     </div>
                     <button 
                       onClick={(e) => {
