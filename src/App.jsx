@@ -10,18 +10,42 @@ export default function VictoryPlanner() {
   const [selectedDay, setSelectedDay] = useState(null);
   const [showDayModal, setShowDayModal] = useState(false);
   
-  const [goals, setGoals] = useState([
-    { id: 1, title: 'EXERCISE 3X PER WEEK', category: 'Health', target: 3, current: 0 }
-  ]);
-  const [tasks, setTasks] = useState([
-    { id: 1, text: 'REVIEW WEEKLY GOALS', completed: false, priority: 'high', date: new Date().toISOString().split('T')[0] }
-  ]);
-  const [habits, setHabits] = useState([
-    { id: 1, name: 'DRINK 8 GLASSES OF WATER', streak: 5, completedToday: false }
-  ]);
-  const [journalEntries, setJournalEntries] = useState([]);
-  const [events, setEvents] = useState([]);
-  const [notes, setNotes] = useState([]);
+  // Load data from localStorage on initial mount
+  const [goals, setGoals] = useState(() => {
+    const saved = localStorage.getItem('victoryPlanner_goals');
+    return saved ? JSON.parse(saved) : [
+      { id: 1, title: 'EXERCISE 3X PER WEEK', category: 'Health', target: 3, current: 0 }
+    ];
+  });
+  
+  const [tasks, setTasks] = useState(() => {
+    const saved = localStorage.getItem('victoryPlanner_tasks');
+    return saved ? JSON.parse(saved) : [
+      { id: 1, text: 'REVIEW WEEKLY GOALS', completed: false, priority: 'high', date: new Date().toISOString().split('T')[0] }
+    ];
+  });
+  
+  const [habits, setHabits] = useState(() => {
+    const saved = localStorage.getItem('victoryPlanner_habits');
+    return saved ? JSON.parse(saved) : [
+      { id: 1, name: 'DRINK 8 GLASSES OF WATER', streak: 5, completedToday: false }
+    ];
+  });
+  
+  const [journalEntries, setJournalEntries] = useState(() => {
+    const saved = localStorage.getItem('victoryPlanner_journal');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [events, setEvents] = useState(() => {
+    const saved = localStorage.getItem('victoryPlanner_events');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [notes, setNotes] = useState(() => {
+    const saved = localStorage.getItem('victoryPlanner_notes');
+    return saved ? JSON.parse(saved) : [];
+  });
   
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
@@ -52,6 +76,31 @@ export default function VictoryPlanner() {
         console.error('Failed to initialize Google Calendar:', error);
       });
   }, []);
+
+  // Save to localStorage whenever data changes
+  useEffect(() => {
+    localStorage.setItem('victoryPlanner_goals', JSON.stringify(goals));
+  }, [goals]);
+
+  useEffect(() => {
+    localStorage.setItem('victoryPlanner_tasks', JSON.stringify(tasks));
+  }, [tasks]);
+
+  useEffect(() => {
+    localStorage.setItem('victoryPlanner_habits', JSON.stringify(habits));
+  }, [habits]);
+
+  useEffect(() => {
+    localStorage.setItem('victoryPlanner_journal', JSON.stringify(journalEntries));
+  }, [journalEntries]);
+
+  useEffect(() => {
+    localStorage.setItem('victoryPlanner_events', JSON.stringify(events));
+  }, [events]);
+
+  useEffect(() => {
+    localStorage.setItem('victoryPlanner_notes', JSON.stringify(notes));
+  }, [notes]);
 
   const handleGoogleSignIn = async () => {
     try {
