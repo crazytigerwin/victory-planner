@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Target, CheckSquare, BookOpen, TrendingUp, Plus, Trash2, Calendar as CalendarIcon } from 'lucide-react';
 import { initGoogleCalendar, signIn, signOut, isSignedIn, getEvents, createEvent, deleteEvent as deleteGoogleEvent } from './googleCalendar';
+import { supabase, getUserId } from './supabase';
 
 export default function VictoryPlanner() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -9,43 +10,17 @@ export default function VictoryPlanner() {
   const [isGoogleInitialized, setIsGoogleInitialized] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
   const [showDayModal, setShowDayModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Load data from localStorage on initial mount
-  const [goals, setGoals] = useState(() => {
-    const saved = localStorage.getItem('victoryPlanner_goals');
-    return saved ? JSON.parse(saved) : [
-      { id: 1, title: 'EXERCISE 3X PER WEEK', category: 'Health', target: 3, current: 0 }
-    ];
-  });
+  const userId = getUserId();
   
-  const [tasks, setTasks] = useState(() => {
-    const saved = localStorage.getItem('victoryPlanner_tasks');
-    return saved ? JSON.parse(saved) : [
-      { id: 1, text: 'REVIEW WEEKLY GOALS', completed: false, priority: 'high', date: new Date().toISOString().split('T')[0] }
-    ];
-  });
-  
-  const [habits, setHabits] = useState(() => {
-    const saved = localStorage.getItem('victoryPlanner_habits');
-    return saved ? JSON.parse(saved) : [
-      { id: 1, name: 'DRINK 8 GLASSES OF WATER', streak: 5, completedToday: false }
-    ];
-  });
-  
-  const [journalEntries, setJournalEntries] = useState(() => {
-    const saved = localStorage.getItem('victoryPlanner_journal');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
-  const [events, setEvents] = useState(() => {
-    const saved = localStorage.getItem('victoryPlanner_events');
-    return saved ? JSON.parse(saved) : [];
-  });
-  
-  const [notes, setNotes] = useState(() => {
-    const saved = localStorage.getItem('victoryPlanner_notes');
-    return saved ? JSON.parse(saved) : [];
-  });
+  // Initialize with empty arrays - will load from Supabase
+  const [goals, setGoals] = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [habits, setHabits] = useState([]);
+  const [journalEntries, setJournalEntries] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [notes, setNotes] = useState([]);
   
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
@@ -77,30 +52,94 @@ export default function VictoryPlanner() {
       });
   }, []);
 
-  // Save to localStorage whenever data changes
+  // Load all data from Supabase on mount
   useEffect(() => {
-    localStorage.setItem('victoryPlanner_goals', JSON.stringify(goals));
-  }, [goals]);
+    loadAllData();
+  }, []);
 
-  useEffect(() => {
-    localStorage.setItem('victoryPlanner_tasks', JSON.stringify(tasks));
-  }, [tasks]);
+  const loadAllData = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Load goals
+      const { data: goalsData } = await supabase
+        .from('goals')
+        .select('*')
+        .eq('user_id', userId);
+      if (goalsData) setGoals(goalsData);
 
-  useEffect(() => {
-    localStorage.setItem('victoryPlanner_habits', JSON.stringify(habits));
-  }, [habits]);
+      // Load tasks
+      const { data: tasksData } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', userId);
+      if (tasksData) setTasks(tasksData);
 
-  useEffect(() => {
-    localStorage.setItem('victoryPlanner_journal', JSON.stringify(journalEntries));
-  }, [journalEntries]);
+      // Load habits
+      const { data: habitsData } = await supabase
+        .from('habits')
+        .select('*')
+        .eq('user_id', userId);
+      if (habitsData) setHabits(habitsData);
 
-  useEffect(() => {
-    localStorage.setItem('victoryPlanner_events', JSON.stringify(events));
-  }, [events]);
+      // Load journal entries
+      const { data: journalData } = await supabase
+        .from('journal_entries')
+        .select('*')
+        .eq('user_id', userId);
+      if (journalData) setJournalEntries(journalData);
 
-  useEffect(() => {
-    localStorage.setItem('victoryPlanner_notes', JSON.stringify(notes));
-  }, [notes]);
+      // Load events
+      const { data: eventsData } = await supabase
+        .from('events')
+        .select('*')
+        .eq('user_id', userId);
+      if (eventsData) setEvents(eventsData);
+
+      // Load notes
+      const { data: notesData } = await supabase
+        .from('notes')
+        .select('*')
+        .eq('user_id', userId);
+      if (notesData) setNotes(notesData);
+
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Sync functions for each data type
+  const syncGoals = async (newGoals) => {
+    setGoals(newGoals);
+    localStorage.setItem('victoryPlanner_goals', JSON.stringify(newGoals));
+  };
+
+  const syncTasks = async (newTasks) => {
+    setTasks(newTasks);
+    localStorage.setItem('victoryPlanner_tasks', JSON.stringify(newTasks));
+  };
+
+  const syncHabits = async (newHabits) => {
+    setHabits(newHabits);
+    localStorage.setItem('victoryPlanner_habits', JSON.stringify(newHabits));
+  };
+
+  const syncJournal = async (newEntries) => {
+    setJournalEntries(newEntries);
+    localStorage.setItem('victoryPlanner_journal', JSON.stringify(newEntries));
+  };
+
+  const syncEvents = async (newEvents) => {
+    setEvents(newEvents);
+    localStorage.setItem('victoryPlanner_events', JSON.stringify(newEvents));
+  };
+
+  const syncNotes = async (newNotes) => {
+    setNotes(newNotes);
+    localStorage.setItem('victoryPlanner_notes', JSON.stringify(newNotes));
+  };
 
   const handleGoogleSignIn = async () => {
     try {
@@ -174,27 +213,45 @@ export default function VictoryPlanner() {
     return events.filter(e => e.date === dayStr);
   };
 
-  const addGoal = () => {
+  const addGoal = async () => {
     if (newGoal.title) {
       const finalCategory = newGoal.category === 'Other' ? newGoal.customCategory : newGoal.category;
-      setGoals([...goals, { ...newGoal, category: finalCategory, id: Date.now(), current: 0 }]);
+      const goal = { ...newGoal, category: finalCategory, id: Date.now(), current: 0, user_id: userId };
+      
+      // Add to Supabase
+      await supabase.from('goals').insert([goal]);
+      
+      // Update local state
+      await syncGoals([...goals, goal]);
       setNewGoal({ title: '', category: '', customCategory: '', target: 10, current: 0 });
       setShowGoalModal(false);
       setShowCategoryDropdown(false);
     }
   };
 
-  const addTask = () => {
+  const addTask = async () => {
     if (newTask.text) {
-      setTasks([...tasks, { ...newTask, id: Date.now(), completed: false }]);
+      const task = { ...newTask, id: Date.now(), completed: false, user_id: userId };
+      
+      // Add to Supabase
+      await supabase.from('tasks').insert([task]);
+      
+      // Update local state
+      await syncTasks([...tasks, task]);
       setNewTask({ text: '', priority: 'medium', date: new Date().toISOString().split('T')[0] });
       setShowTaskModal(false);
     }
   };
 
-  const addHabit = () => {
+  const addHabit = async () => {
     if (newHabit.name) {
-      setHabits([...habits, { ...newHabit, id: Date.now(), streak: 0, completedToday: false }]);
+      const habit = { ...newHabit, id: Date.now(), streak: 0, completedToday: false, user_id: userId };
+      
+      // Add to Supabase
+      await supabase.from('habits').insert([habit]);
+      
+      // Update local state
+      await syncHabits([...habits, habit]);
       setNewHabit({ name: '' });
       setShowHabitModal(false);
     }
@@ -202,10 +259,13 @@ export default function VictoryPlanner() {
 
   const addEvent = async () => {
     if (newEvent.title && newEvent.date) {
-      const event = { ...newEvent, id: Date.now() };
+      const event = { ...newEvent, id: Date.now(), user_id: userId };
       
-      // Add to local state
-      setEvents([...events, event]);
+      // Add to Supabase
+      await supabase.from('events').insert([event]);
+      
+      // Update local state
+      await syncEvents([...events, event]);
       
       // Sync to Google Calendar if signed in and sync is enabled
       if (isGoogleSignedIn && syncToGoogle) {
@@ -224,8 +284,11 @@ export default function VictoryPlanner() {
   };
 
   const deleteEventLocal = async (eventId, googleEventId) => {
-    // Delete from local state
-    setEvents(events.filter(e => e.id !== eventId));
+    // Delete from Supabase
+    await supabase.from('events').delete().eq('id', eventId);
+    
+    // Update local state
+    await syncEvents(events.filter(e => e.id !== eventId));
     
     // Delete from Google Calendar if it's synced
     if (isGoogleSignedIn && googleEventId) {
@@ -237,25 +300,40 @@ export default function VictoryPlanner() {
     }
   };
 
-  const createNewNote = () => {
-    const newNote = { id: Date.now(), title: 'New Note', content: '', date: new Date().toISOString() };
-    setNotes([newNote, ...notes]);
+  const createNewNote = async () => {
+    const newNote = { id: Date.now(), title: 'New Note', content: '', date: new Date().toISOString(), user_id: userId };
+    
+    // Add to Supabase
+    await supabase.from('notes').insert([newNote]);
+    
+    // Update local state
+    await syncNotes([newNote, ...notes]);
     setSelectedNote(newNote);
     setNoteContent('');
   };
 
-  const saveNote = () => {
+  const saveNote = async () => {
     if (selectedNote) {
       const lines = noteContent.split('\n');
       const firstLine = lines[0].trim() || 'New Note';
-      setNotes(notes.map(n => n.id === selectedNote.id ? { ...n, title: firstLine, content: noteContent, date: new Date().toISOString() } : n));
+      const updatedNote = { ...selectedNote, title: firstLine, content: noteContent, date: new Date().toISOString() };
+      
+      // Update in Supabase
+      await supabase.from('notes').update(updatedNote).eq('id', selectedNote.id);
+      
+      // Update local state
+      await syncNotes(notes.map(n => n.id === selectedNote.id ? updatedNote : n));
       setSelectedNote(null);
       setNoteContent('');
     }
   };
 
-  const deleteNote = (id) => {
-    setNotes(notes.filter(n => n.id !== id));
+  const deleteNote = async (id) => {
+    // Delete from Supabase
+    await supabase.from('notes').delete().eq('id', id);
+    
+    // Update local state
+    await syncNotes(notes.filter(n => n.id !== id));
     if (selectedNote && selectedNote.id === id) {
       setSelectedNote(null);
       setNoteContent('');
@@ -267,49 +345,92 @@ export default function VictoryPlanner() {
     setNoteContent(note.content);
   };
 
-  const toggleTask = (id) => {
-    setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
+  const toggleTask = async (id) => {
+    const updatedTasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+    const updatedTask = updatedTasks.find(t => t.id === id);
+    
+    // Update in Supabase
+    await supabase.from('tasks').update({ completed: updatedTask.completed }).eq('id', id);
+    
+    // Update local state
+    await syncTasks(updatedTasks);
   };
 
-  const deleteTask = (id) => {
-    setTasks(tasks.filter(t => t.id !== id));
+  const deleteTask = async (id) => {
+    // Delete from Supabase
+    await supabase.from('tasks').delete().eq('id', id);
+    
+    // Update local state
+    await syncTasks(tasks.filter(t => t.id !== id));
   };
 
-  const toggleHabit = (id) => {
-    setHabits(habits.map(h => 
+  const toggleHabit = async (id) => {
+    const updatedHabits = habits.map(h => 
       h.id === id ? { 
         ...h, 
         completedToday: !h.completedToday,
         streak: !h.completedToday ? h.streak + 1 : Math.max(0, h.streak - 1)
       } : h
-    ));
+    );
+    const updatedHabit = updatedHabits.find(h => h.id === id);
+    
+    // Update in Supabase
+    await supabase.from('habits').update({ 
+      completedToday: updatedHabit.completedToday,
+      streak: updatedHabit.streak
+    }).eq('id', id);
+    
+    // Update local state
+    await syncHabits(updatedHabits);
   };
 
-  const deleteHabit = (id) => {
-    setHabits(habits.filter(h => h.id !== id));
+  const deleteHabit = async (id) => {
+    // Delete from Supabase
+    await supabase.from('habits').delete().eq('id', id);
+    
+    // Update local state
+    await syncHabits(habits.filter(h => h.id !== id));
   };
 
-  const updateGoalProgress = (id, change) => {
-    setGoals(goals.map(g => {
+  const updateGoalProgress = async (id, change) => {
+    const updatedGoals = goals.map(g => {
       if (g.id === id) {
         const newCurrent = Math.max(0, Math.min(g.target, g.current + change));
         return { ...g, current: newCurrent };
       }
       return g;
-    }));
+    });
+    const updatedGoal = updatedGoals.find(g => g.id === id);
+    
+    // Update in Supabase
+    await supabase.from('goals').update({ current: updatedGoal.current }).eq('id', id);
+    
+    // Update local state
+    await syncGoals(updatedGoals);
   };
 
-  const deleteGoal = (id) => {
-    setGoals(goals.filter(g => g.id !== id));
+  const deleteGoal = async (id) => {
+    // Delete from Supabase
+    await supabase.from('goals').delete().eq('id', id);
+    
+    // Update local state
+    await syncGoals(goals.filter(g => g.id !== id));
   };
 
-  const saveJournalEntry = () => {
+  const saveJournalEntry = async () => {
     if (journalText.trim()) {
-      setJournalEntries([...journalEntries, { 
+      const entry = { 
         id: Date.now(), 
         text: journalText, 
-        date: new Date().toISOString() 
-      }]);
+        date: new Date().toISOString(),
+        user_id: userId
+      };
+      
+      // Add to Supabase
+      await supabase.from('journal_entries').insert([entry]);
+      
+      // Update local state
+      await syncJournal([...journalEntries, entry]);
       setJournalText('');
     }
   };
@@ -353,7 +474,7 @@ export default function VictoryPlanner() {
             }}>
               THE VICTORY PLANNER
             </h1>
-            <p className="text-center text-orange-300 text-sm md:text-base" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>{formatDate(currentDate)}</p>
+            <p className="text-center text-white font-bold text-sm md:text-base" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>{formatDate(currentDate)}</p>
             {isGoogleInitialized && (
               <div className="flex justify-center gap-2">
                 {isGoogleSignedIn ? (
@@ -410,22 +531,25 @@ export default function VictoryPlanner() {
         
         {activeTab === 'dashboard' && (
           <div className="space-y-6">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-orange-500/20">
-              <div className="flex justify-between items-center mb-4">
-                <button onClick={() => changeMonth(-1)} className="px-3 py-1 rounded-lg hover:opacity-90 transition-all text-white text-sm font-bold" style={{ backgroundColor: '#FF6200' }}>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 md:p-6 border border-orange-500/20">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mb-4">
+                <button onClick={() => changeMonth(-1)} className="px-3 py-1 rounded-lg hover:opacity-90 transition-all text-white text-xs md:text-sm font-bold w-full sm:w-auto" style={{ backgroundColor: '#FF6200' }}>
                   ← PREV
                 </button>
-                <h3 className="text-2xl font-bold" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>{currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h3>
-                <button onClick={() => changeMonth(1)} className="px-3 py-1 rounded-lg hover:opacity-90 transition-all text-white text-sm font-bold" style={{ backgroundColor: '#FF6200' }}>
+                <h3 className="text-lg md:text-2xl font-bold text-center" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>{currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h3>
+                <button onClick={() => changeMonth(1)} className="px-3 py-1 rounded-lg hover:opacity-90 transition-all text-white text-xs md:text-sm font-bold w-full sm:w-auto" style={{ backgroundColor: '#FF6200' }}>
                   NEXT →
                 </button>
               </div>
-              <div className="grid grid-cols-7 gap-2 mb-2">
-                {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
-                  <div key={day} className="text-center text-sm font-bold text-orange-300" style={{ letterSpacing: '0.05em' }}>{day}</div>
+              <div className="grid grid-cols-7 gap-1 md:gap-2 mb-2">
+                {['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'].map((day, idx) => (
+                  <div key={day} className="text-center text-[10px] md:text-sm font-bold text-white" style={{ letterSpacing: '0.05em' }}>
+                    <span className="hidden md:inline">{day}</span>
+                    <span className="md:hidden">{['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][idx]}</span>
+                  </div>
                 ))}
               </div>
-              <div className="grid grid-cols-7 gap-2">
+              <div className="grid grid-cols-7 gap-1 md:gap-2">
                 {Array.from({ length: 35 }, (_, i) => {
                   const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
                   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
@@ -440,16 +564,16 @@ export default function VictoryPlanner() {
                     <div 
                       key={i} 
                       onClick={() => isCurrentMonth && openDayModal(dayNum)}
-                      className={`aspect-square p-2 rounded-lg ${!isCurrentMonth ? 'opacity-30' : ''} ${isToday ? 'ring-2 ring-orange-500' : ''} bg-black/20 hover:bg-black/30 transition-all cursor-pointer`}
+                      className={`aspect-square p-1 md:p-2 rounded-lg ${!isCurrentMonth ? 'opacity-30' : ''} ${isToday ? 'ring-2 ring-orange-500' : ''} bg-black/20 hover:bg-black/30 transition-all cursor-pointer`}
                     >
                       {isCurrentMonth && (
                         <>
-                          <div className={`text-sm font-bold mb-1 ${isToday ? 'text-orange-500' : ''}`}>{dayNum}</div>
+                          <div className={`text-xs md:text-sm font-bold mb-1 ${isToday ? 'text-orange-500' : ''}`}>{dayNum}</div>
                           <div className="space-y-1">
                             {dayEvents.slice(0, 2).map(event => (
-                              <div key={event.id} className="text-xs px-1 py-0.5 rounded truncate" style={{ backgroundColor: event.fromGoogle ? '#10B981' : '#FF6200' }}>{event.title}</div>
+                              <div key={event.id} className="text-[8px] md:text-xs px-1 py-0.5 rounded truncate" style={{ backgroundColor: event.fromGoogle ? '#10B981' : '#FF6200' }}>{event.title}</div>
                             ))}
-                            {dayEvents.length > 2 && <div className="text-xs text-orange-300">+{dayEvents.length - 2} more</div>}
+                            {dayEvents.length > 2 && <div className="text-[8px] md:text-xs text-orange-300">+{dayEvents.length - 2}</div>}
                           </div>
                         </>
                       )}
@@ -735,29 +859,25 @@ export default function VictoryPlanner() {
                 <Plus size={20} />Add Event
               </button>
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-orange-500/20">
-              <div className="flex justify-between items-center mb-6">
-                <div className="flex items-center gap-4">
-                  <button onClick={() => changeMonth(-1)} className="px-3 py-2 rounded-lg hover:opacity-90 transition-all text-white text-sm font-bold" style={{ backgroundColor: '#FF6200' }}>
-                    ← PREV
-                  </button>
-                  <h3 className="text-3xl font-bold">{currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h3>
-                  <button onClick={() => changeMonth(1)} className="px-3 py-2 rounded-lg hover:opacity-90 transition-all text-white text-sm font-bold" style={{ backgroundColor: '#FF6200' }}>
-                    NEXT →
-                  </button>
-                </div>
-                <button onClick={() => setShowEventModal(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg hover:opacity-90 transition-all text-white font-bold" style={{ backgroundColor: '#FF6200' }}>
-                  <Plus size={20} />Add Event
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 md:p-6 border border-orange-500/20">
+              <div className="flex items-center justify-between gap-2 mb-6">
+                <button onClick={() => changeMonth(-1)} className="px-3 py-2 rounded-lg hover:opacity-90 transition-all text-white text-xs md:text-sm font-bold" style={{ backgroundColor: '#FF6200' }}>
+                  ← PREV
+                </button>
+                <h3 className="text-xl md:text-3xl font-bold text-center flex-1" style={{ textTransform: 'uppercase' }}>{currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase()}</h3>
+                <button onClick={() => changeMonth(1)} className="px-3 py-2 rounded-lg hover:opacity-90 transition-all text-white text-xs md:text-sm font-bold" style={{ backgroundColor: '#FF6200' }}>
+                  NEXT →
                 </button>
               </div>
-              <div className="text-center mb-6">
-              </div>
-              <div className="grid grid-cols-7 gap-3 mb-3">
-                {['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'].map(day => (
-                  <div key={day} className="text-center text-sm font-bold text-orange-300" style={{ letterSpacing: '0.05em' }}>{day}</div>
+              <div className="grid grid-cols-7 gap-1 md:gap-3 mb-3">
+                {['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'].map((day, idx) => (
+                  <div key={day} className="text-center text-[10px] md:text-sm font-bold text-white" style={{ letterSpacing: '0.05em' }}>
+                    <span className="hidden md:inline">{day}</span>
+                    <span className="md:hidden">{['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][idx]}</span>
+                  </div>
                 ))}
               </div>
-              <div className="grid grid-cols-7 gap-3">
+              <div className="grid grid-cols-7 gap-1 md:gap-3">
                 {Array.from({ length: 35 }, (_, i) => {
                   const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
                   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
@@ -772,21 +892,16 @@ export default function VictoryPlanner() {
                     <div 
                       key={i} 
                       onClick={() => isCurrentMonth && openDayModal(dayNum)}
-                      className={`aspect-square p-3 rounded-lg ${!isCurrentMonth ? 'opacity-30' : ''} ${isToday ? 'ring-2 ring-orange-500' : ''} bg-black/20 hover:bg-black/30 transition-all cursor-pointer`}
+                      className={`aspect-square p-1 md:p-3 rounded-lg ${!isCurrentMonth ? 'opacity-30' : ''} ${isToday ? 'ring-2 ring-orange-500' : ''} bg-black/20 hover:bg-black/30 transition-all cursor-pointer`}
                     >
                       {isCurrentMonth && (
                         <>
-                          <div className={`text-lg font-bold mb-2 ${isToday ? 'text-orange-500' : ''}`}>{dayNum}</div>
+                          <div className={`text-sm md:text-lg font-bold mb-1 md:mb-2 ${isToday ? 'text-orange-500' : ''}`}>{dayNum}</div>
                           <div className="space-y-1">
                             {dayEvents.map(event => (
-                              <div key={event.id} className="text-xs px-2 py-1 rounded truncate flex justify-between items-center" style={{ backgroundColor: event.fromGoogle ? '#10B981' : '#FF6200' }}>
-                                <span>
-                                  {event.time && <span className="font-bold">{event.time} </span>}
-                                  {event.title}
-                                </span>
-                                <button onClick={() => deleteEventLocal(event.id, event.googleEventId)} className="text-red-200 hover:text-white ml-1">
-                                  <Trash2 size={12} />
-                                </button>
+                              <div key={event.id} className="text-[8px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 rounded truncate" style={{ backgroundColor: event.fromGoogle ? '#10B981' : '#FF6200' }}>
+                                {event.time && <span className="font-bold hidden md:inline">{event.time} </span>}
+                                {event.title}
                               </div>
                             ))}
                           </div>
