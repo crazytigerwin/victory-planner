@@ -37,8 +37,31 @@ export default function VictoryPlanner() {
   const [journalText, setJournalText] = useState('');
   const [todayMood, setTodayMood] = useState('');
   const [syncToGoogle, setSyncToGoogle] = useState(true);
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [syncCode, setSyncCode] = useState('');
+  const [inputSyncCode, setInputSyncCode] = useState('');
 
   const categoryOptions = ['Health & Fitness', 'Career', 'Finance', 'Personal Growth', 'Relationships', 'Education', 'Creativity', 'Travel', 'Other'];
+
+  const generateSyncCode = () => {
+    const code = userId.split('_').pop().toUpperCase();
+    setSyncCode(code);
+    setShowSyncModal(true);
+  };
+
+  const applySyncCode = async () => {
+    if (inputSyncCode.trim()) {
+      // Find the user_id that matches this code
+      const newUserId = `user_${inputSyncCode.toLowerCase()}`;
+      
+      // Set the new user ID
+      localStorage.setItem('victory_planner_user_id', newUserId);
+      
+      // Reload the page to fetch data with new user ID
+      alert('Sync code applied! Reloading...');
+      window.location.reload();
+    }
+  };
 
   // Initialize Google Calendar API
   useEffect(() => {
@@ -475,26 +498,31 @@ export default function VictoryPlanner() {
               THE VICTORY PLANNER
             </h1>
             <p className="text-center text-white font-bold text-sm md:text-base" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>{formatDate(currentDate)}</p>
-            {isGoogleInitialized && (
-              <div className="flex justify-center gap-2">
-                {isGoogleSignedIn ? (
-                  <>
-                    <button onClick={syncFromGoogleCalendar} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:opacity-90 transition-all text-white text-xs md:text-sm font-bold" style={{ backgroundColor: '#10B981' }}>
+            <div className="flex justify-center gap-2 flex-wrap">
+              {isGoogleInitialized && (
+                <>
+                  {isGoogleSignedIn ? (
+                    <>
+                      <button onClick={syncFromGoogleCalendar} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:opacity-90 transition-all text-white text-xs md:text-sm font-bold" style={{ backgroundColor: '#10B981' }}>
+                        <CalendarIcon size={14} />
+                        SYNC
+                      </button>
+                      <button onClick={handleGoogleSignOut} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:opacity-90 transition-all text-white text-xs md:text-sm font-bold" style={{ backgroundColor: '#6B7280' }}>
+                        SIGN OUT
+                      </button>
+                    </>
+                  ) : (
+                    <button onClick={handleGoogleSignIn} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:opacity-90 transition-all text-white text-xs md:text-sm font-bold" style={{ backgroundColor: '#FF6200' }}>
                       <CalendarIcon size={14} />
-                      SYNC
+                      CONNECT GOOGLE
                     </button>
-                    <button onClick={handleGoogleSignOut} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:opacity-90 transition-all text-white text-xs md:text-sm font-bold" style={{ backgroundColor: '#6B7280' }}>
-                      SIGN OUT
-                    </button>
-                  </>
-                ) : (
-                  <button onClick={handleGoogleSignIn} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:opacity-90 transition-all text-white text-xs md:text-sm font-bold" style={{ backgroundColor: '#FF6200' }}>
-                    <CalendarIcon size={14} />
-                    CONNECT GOOGLE
-                  </button>
-                )}
-              </div>
-            )}
+                  )}
+                </>
+              )}
+              <button onClick={generateSyncCode} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:opacity-90 transition-all text-white text-xs md:text-sm font-bold" style={{ backgroundColor: '#9333EA' }}>
+                🔗 SYNC DEVICES
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1115,6 +1143,43 @@ export default function VictoryPlanner() {
                   </div>
                 ))
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSyncModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 max-w-md w-full border border-orange-500/20">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-2xl font-bold" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>SYNC DEVICES</h3>
+              <button onClick={() => setShowSyncModal(false)} className="text-white hover:text-orange-300 text-2xl">×</button>
+            </div>
+            
+            <div className="mb-6">
+              <h4 className="text-lg font-bold mb-2 text-orange-300" style={{ textTransform: 'uppercase' }}>YOUR SYNC CODE:</h4>
+              <div className="bg-black/30 rounded-lg p-4 text-center border-2 border-orange-500">
+                <p className="text-4xl font-bold tracking-wider" style={{ color: '#FF6200' }}>{userId}</p>
+              </div>
+              <p className="text-sm text-gray-300 mt-2 text-center">Copy this entire code and enter it on your other device</p>
+            </div>
+
+            <div className="border-t border-white/20 pt-6">
+              <h4 className="text-lg font-bold mb-2 text-orange-300" style={{ textTransform: 'uppercase' }}>ENTER CODE FROM ANOTHER DEVICE:</h4>
+              <input 
+                type="text" 
+                placeholder="Paste sync code here" 
+                value={inputSyncCode} 
+                onChange={(e) => setInputSyncCode(e.target.value)}
+                className="w-full bg-black/30 rounded-lg p-3 text-white placeholder-gray-400 mb-3 border border-orange-500/20"
+              />
+              <button 
+                onClick={applySyncCode}
+                className="w-full px-4 py-3 rounded-lg hover:opacity-90 transition-all text-white font-bold" 
+                style={{ backgroundColor: '#9333EA' }}
+              >
+                SYNC THIS DEVICE
+              </button>
             </div>
           </div>
         </div>
