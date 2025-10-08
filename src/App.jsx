@@ -31,7 +31,7 @@ export default function VictoryPlanner() {
   const [noteContent, setNoteContent] = useState('');
   
   const [newGoal, setNewGoal] = useState({ title: '', category: '', customCategory: '', target: 10, current: 0 });
-  const [newTask, setNewTask] = useState({ text: '', priority: 'medium', date: new Date().toISOString().split('T')[0] });
+  const [newTask, setNewTask] = useState({ text: '', priority: 'medium', date: '' });
   const [newHabit, setNewHabit] = useState({ name: '' });
   const [newEvent, setNewEvent] = useState({ title: '', date: '', time: '' });
   const [journalText, setJournalText] = useState('');
@@ -40,6 +40,14 @@ export default function VictoryPlanner() {
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [syncCode, setSyncCode] = useState('');
   const [inputSyncCode, setInputSyncCode] = useState('');
+
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   const categoryOptions = ['Health & Fitness', 'Career', 'Finance', 'Personal Growth', 'Relationships', 'Education', 'Creativity', 'Travel', 'Other'];
 
@@ -253,14 +261,14 @@ export default function VictoryPlanner() {
 
   const addTask = async () => {
     if (newTask.text) {
-      const task = { ...newTask, id: Date.now(), completed: false, user_id: userId };
+      const task = { ...newTask, id: Date.now(), completed: false, user_id: userId, date: newTask.date || getTodayDate() };
       
       // Add to Supabase
       await supabase.from('tasks').insert([task]);
       
       // Update local state
       await syncTasks([...tasks, task]);
-      setNewTask({ text: '', priority: 'medium', date: new Date().toISOString().split('T')[0] });
+      setNewTask({ text: '', priority: 'medium', date: '' });
       setShowTaskModal(false);
     }
   };
@@ -457,7 +465,7 @@ export default function VictoryPlanner() {
     }
   };
 
-  const todayTasks = tasks.filter(t => t.date === new Date().toISOString().split('T')[0]);
+  const todayTasks = tasks.filter(t => t.date === getTodayDate());
   const completedToday = todayTasks.filter(t => t.completed).length;
   const totalToday = todayTasks.length;
 
@@ -860,10 +868,13 @@ export default function VictoryPlanner() {
                       <p className="text-white font-bold text-sm mt-2" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>CLICK TO EDIT</p>
                     </div>
                     <button 
-                      onClick={(e) => {
+                      onClick={async (e) => {
                         e.stopPropagation();
                         if (window.confirm('Are you sure you want to delete this journal entry?')) {
-                          setJournalEntries(journalEntries.filter(j => j.id !== entry.id));
+                          // Delete from Supabase
+                          await supabase.from('journal_entries').delete().eq('id', entry.id);
+                          // Update local state
+                          await syncJournal(journalEntries.filter(j => j.id !== entry.id));
                         }
                       }} 
                       className="text-red-400 hover:text-red-300 ml-4 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -1008,11 +1019,11 @@ export default function VictoryPlanner() {
             </div>
             <div className="mb-3">
               <label className="block text-sm font-bold mb-2 text-orange-300">DATE</label>
-              <input type="date" value={newTask.date} onChange={(e) => setNewTask({ ...newTask, date: e.target.value })} className="w-full bg-black/30 rounded-lg p-3 text-white border border-orange-500/20" />
+              <input type="date" value={newTask.date || getTodayDate()} onChange={(e) => setNewTask({ ...newTask, date: e.target.value })} className="w-full bg-black/30 rounded-lg p-3 text-white border border-orange-500/20" />
             </div>
             <div className="flex gap-3">
               <button onClick={addTask} className="flex-1 px-4 py-2 rounded-lg hover:opacity-90 transition-all text-white font-bold" style={{ backgroundColor: '#FF6200' }}>Add Task</button>
-              <button onClick={() => { setShowTaskModal(false); setNewTask({ text: '', priority: 'medium', date: new Date().toISOString().split('T')[0] }); }} className="flex-1 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all text-white font-bold">Cancel</button>
+              <button onClick={() => { setShowTaskModal(false); setNewTask({ text: '', priority: 'medium', date: '' }); }} className="flex-1 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all text-white font-bold">Cancel</button>
             </div>
           </div>
         </div>
