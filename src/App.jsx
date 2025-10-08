@@ -51,14 +51,13 @@ export default function VictoryPlanner() {
 
   const applySyncCode = async () => {
     if (inputSyncCode.trim()) {
-      // Find the user_id that matches this code
-      const newUserId = `user_${inputSyncCode.toLowerCase()}`;
+      // Set the new user ID directly
+      localStorage.setItem('victory_planner_user_id', inputSyncCode.trim());
       
-      // Set the new user ID
-      localStorage.setItem('victory_planner_user_id', newUserId);
+      // Close modal
+      setShowSyncModal(false);
       
       // Reload the page to fetch data with new user ID
-      alert('Sync code applied! Reloading...');
       window.location.reload();
     }
   };
