@@ -42,6 +42,7 @@ export default function VictoryPlanner() {
   const [inputSyncCode, setInputSyncCode] = useState('');
   const [showEditEventModal, setShowEditEventModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
+  const [calendarView, setCalendarView] = useState('month'); // 'month', 'week', or 'day'
 
   const getTodayDate = () => {
     const today = new Date();
