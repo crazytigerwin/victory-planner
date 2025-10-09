@@ -445,6 +445,24 @@ export default function VictoryPlanner() {
     await syncGoals(updatedGoals);
   };
 
+  const setGoalProgressDirectly = async (id, value) => {
+    const numValue = parseInt(value) || 0;
+    const updatedGoals = goals.map(g => {
+      if (g.id === id) {
+        const newCurrent = Math.max(0, Math.min(g.target, numValue));
+        return { ...g, current: newCurrent };
+      }
+      return g;
+    });
+    const updatedGoal = updatedGoals.find(g => g.id === id);
+    
+    // Update in Supabase
+    await supabase.from('goals').update({ current: updatedGoal.current }).eq('id', id);
+    
+    // Update local state
+    await syncGoals(updatedGoals);
+  };
+
   const deleteGoal = async (id) => {
     // Delete from Supabase
     await supabase.from('goals').delete().eq('id', id);
