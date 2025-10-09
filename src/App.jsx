@@ -967,15 +967,45 @@ export default function VictoryPlanner() {
               </button>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 md:p-6 border border-orange-500/20">
-              <div className="flex items-center justify-between gap-2 mb-6">
-                <button onClick={() => changeMonth(-1)} className="px-3 py-2 rounded-lg hover:opacity-90 transition-all text-white text-xs md:text-sm font-bold" style={{ backgroundColor: '#FF6200' }}>
-                  ← PREV
-                </button>
-                <h3 className="text-xl md:text-3xl font-bold text-center flex-1" style={{ textTransform: 'uppercase' }}>{currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase()}</h3>
-                <button onClick={() => changeMonth(1)} className="px-3 py-2 rounded-lg hover:opacity-90 transition-all text-white text-xs md:text-sm font-bold" style={{ backgroundColor: '#FF6200' }}>
-                  NEXT →
-                </button>
-              </div>
+<div className="flex flex-col gap-4 mb-6">
+  <div className="flex items-center justify-between gap-2">
+    <button onClick={() => changeMonth(-1)} className="px-3 py-2 rounded-lg hover:opacity-90 transition-all text-white text-xs md:text-sm font-bold" style={{ backgroundColor: '#FF6200' }}>
+      ← PREV
+    </button>
+    <h3 className="text-xl md:text-3xl font-bold text-center flex-1" style={{ textTransform: 'uppercase' }}>
+      {calendarView === 'month' && currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase()}
+      {calendarView === 'week' && `WEEK OF ${getWeekDates()[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}`}
+      {calendarView === 'day' && currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }).toUpperCase()}
+    </h3>
+    <button onClick={() => changeMonth(1)} className="px-3 py-2 rounded-lg hover:opacity-90 transition-all text-white text-xs md:text-sm font-bold" style={{ backgroundColor: '#FF6200' }}>
+      NEXT →
+    </button>
+  </div>
+  
+  <div className="flex justify-center gap-2">
+    <button 
+      onClick={() => setCalendarView('month')}
+      className={`px-4 py-2 rounded-lg font-bold transition-all ${calendarView === 'month' ? 'text-white' : 'text-orange-300 bg-white/10 hover:bg-white/20'}`}
+      style={calendarView === 'month' ? { backgroundColor: '#FF6200' } : {}}
+    >
+      MONTH
+    </button>
+    <button 
+      onClick={() => setCalendarView('week')}
+      className={`px-4 py-2 rounded-lg font-bold transition-all ${calendarView === 'week' ? 'text-white' : 'text-orange-300 bg-white/10 hover:bg-white/20'}`}
+      style={calendarView === 'week' ? { backgroundColor: '#FF6200' } : {}}
+    >
+      WEEK
+    </button>
+    <button 
+      onClick={() => setCalendarView('day')}
+      className={`px-4 py-2 rounded-lg font-bold transition-all ${calendarView === 'day' ? 'text-white' : 'text-orange-300 bg-white/10 hover:bg-white/20'}`}
+      style={calendarView === 'day' ? { backgroundColor: '#FF6200' } : {}}
+    >
+      DAY
+    </button>
+  </div>
+</div>
               <div className="grid grid-cols-7 gap-1 md:gap-3 mb-3">
                 {['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'].map((day, idx) => (
                   <div key={day} className="text-center text-[10px] md:text-sm font-bold text-white" style={{ letterSpacing: '0.05em' }}>
