@@ -40,6 +40,8 @@ export default function VictoryPlanner() {
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [syncCode, setSyncCode] = useState('');
   const [inputSyncCode, setInputSyncCode] = useState('');
+  const [showEditEventModal, setShowEditEventModal] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(null);
 
   const getTodayDate = () => {
     const today = new Date();
@@ -241,6 +243,29 @@ export default function VictoryPlanner() {
     const selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), dayNum);
     setSelectedDay(selectedDate);
     setShowDayModal(true);
+  };
+
+  const openEditEventModal = (event, e) => {
+    e.stopPropagation(); // Prevent day modal from opening
+    setEditingEvent(event);
+    setShowEditEventModal(true);
+  };
+
+  const updateEvent = async () => {
+    if (editingEvent && editingEvent.title && editingEvent.date) {
+      // Update in Supabase
+      await supabase.from('events').update({
+        title: editingEvent.title,
+        date: editingEvent.date,
+        time: editingEvent.time
+      }).eq('id', editingEvent.id);
+      
+      // Update local state
+      await syncEvents(events.map(e => e.id === editingEvent.id ? editingEvent : e));
+      
+      setShowEditEventModal(false);
+      setEditingEvent(null);
+    }
   };
 
   const getEventsForDay = (day) => {
@@ -454,13 +479,17 @@ export default function VictoryPlanner() {
       }
       return g;
     });
-    const updatedGoal = updatedGoals.find(g => g.id === id);
     
-    // Update in Supabase
-    await supabase.from('goals').update({ current: updatedGoal.current }).eq('id', id);
-    
-    // Update local state
+    // Update local state immediately for responsive UI
     await syncGoals(updatedGoals);
+    
+    // Update in Supabase (debounced)
+    const updatedGoal = updatedGoals.find(g => g.id === id);
+    try {
+      await supabase.from('goals').update({ current: updatedGoal.current }).eq('id', id);
+    } catch (error) {
+      console.error('Failed to update goal in Supabase:', error);
+    }
   };
 
   const deleteGoal = async (id) => {
@@ -630,7 +659,14 @@ export default function VictoryPlanner() {
                           <div className={`text-xs md:text-sm font-bold mb-1 ${isToday ? 'text-orange-500' : ''}`}>{dayNum}</div>
                           <div className="space-y-1">
                             {dayEvents.slice(0, 2).map(event => (
-                              <div key={event.id} className="text-[8px] md:text-xs px-1 py-0.5 rounded truncate" style={{ backgroundColor: event.fromGoogle ? '#10B981' : '#FF6200' }}>{event.title}</div>
+                              <div 
+                                key={event.id} 
+                                onClick={(e) => openEditEventModal(event, e)}
+                                className="text-[8px] md:text-xs px-1 py-0.5 rounded truncate cursor-pointer hover:opacity-80 transition-opacity" 
+                                style={{ backgroundColor: event.fromGoogle ? '#10B981' : '#FF6200' }}
+                              >
+                                {event.title}
+                              </div>
                             ))}
                             {dayEvents.length > 2 && <div className="text-[8px] md:text-xs text-orange-300">+{dayEvents.length - 2}</div>}
                           </div>
@@ -808,16 +844,16 @@ export default function VictoryPlanner() {
                         −
                       </button>
                       <div className="text-center">
-<input
-  type="number"
-  value={goal.current}
-  onChange={(e) => setGoalProgressDirectly(goal.id, e.target.value)}
-  className="w-24 text-4xl font-bold text-center bg-transparent border-b-2 border-orange-500 focus:outline-none"
-  style={{ color: '#FF6200' }}
-  min="0"
-  max={goal.target}
-/>
-<div className="text-sm text-gray-300 mt-2">of {goal.target}</div>
+                        <input
+                          type="number"
+                          value={goal.current}
+                          onChange={(e) => setGoalProgressDirectly(goal.id, e.target.value)}
+                          className="w-24 text-4xl font-bold text-center bg-transparent border-b-2 border-orange-500 focus:outline-none"
+                          style={{ color: '#FF6200' }}
+                          min="0"
+                          max={goal.target}
+                        />
+                        <div className="text-sm text-gray-300 mt-2">of {goal.target}</div>
                       </div>
                       <button 
                         onClick={() => updateGoalProgress(goal.id, 1)}
@@ -969,7 +1005,12 @@ export default function VictoryPlanner() {
                           <div className={`text-sm md:text-lg font-bold mb-1 md:mb-2 ${isToday ? 'text-orange-500' : ''}`}>{dayNum}</div>
                           <div className="space-y-1">
                             {dayEvents.map(event => (
-                              <div key={event.id} className="text-[8px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 rounded truncate" style={{ backgroundColor: event.fromGoogle ? '#10B981' : '#FF6200' }}>
+                              <div 
+                                key={event.id} 
+                                onClick={(e) => openEditEventModal(event, e)}
+                                className="text-[8px] md:text-xs px-1 md:px-2 py-0.5 md:py-1 rounded truncate cursor-pointer hover:opacity-80 transition-opacity" 
+                                style={{ backgroundColor: event.fromGoogle ? '#10B981' : '#FF6200' }}
+                              >
                                 {event.time && <span className="font-bold hidden md:inline">{event.time} </span>}
                                 {event.title}
                               </div>
@@ -1185,6 +1226,78 @@ export default function VictoryPlanner() {
                   </div>
                 ))
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showEditEventModal && editingEvent && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 max-w-md w-full border border-orange-500/20">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-2xl font-bold" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>EDIT EVENT</h3>
+              <button onClick={() => setShowEditEventModal(false)} className="text-white hover:text-orange-300 text-2xl">×</button>
+            </div>
+            
+            <input 
+              type="text" 
+              placeholder="Event title" 
+              value={editingEvent.title} 
+              onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })} 
+              className="w-full bg-black/30 rounded-lg p-3 text-white placeholder-gray-400 mb-3 border border-orange-500/20" 
+            />
+            <div className="mb-3">
+              <label className="block text-sm font-bold mb-2 text-orange-300">DATE</label>
+              <input 
+                type="date" 
+                value={editingEvent.date} 
+                onChange={(e) => setEditingEvent({ ...editingEvent, date: e.target.value })} 
+                className="w-full bg-black/30 rounded-lg p-3 text-white border border-orange-500/20" 
+              />
+            </div>
+            <div className="mb-3">
+              <label className="block text-sm font-bold mb-2 text-orange-300">TIME (OPTIONAL)</label>
+              <input 
+                type="time" 
+                value={editingEvent.time || ''} 
+                onChange={(e) => setEditingEvent({ ...editingEvent, time: e.target.value })} 
+                className="w-full bg-black/30 rounded-lg p-3 text-white border border-orange-500/20" 
+              />
+            </div>
+            
+            {editingEvent.fromGoogle && (
+              <div className="mb-3 p-3 bg-green-500/20 rounded-lg border border-green-500/40">
+                <p className="text-sm text-green-300">
+                  <strong>Note:</strong> This event is from Google Calendar. Changes will only update locally.
+                </p>
+              </div>
+            )}
+            
+            <div className="flex gap-3">
+              <button 
+                onClick={updateEvent} 
+                className="flex-1 px-4 py-2 rounded-lg hover:opacity-90 transition-all text-white font-bold" 
+                style={{ backgroundColor: '#FF6200' }}
+              >
+                Save Changes
+              </button>
+              <button 
+                onClick={() => {
+                  if (window.confirm('Delete this event?')) {
+                    deleteEventLocal(editingEvent.id, editingEvent.googleEventId);
+                    setShowEditEventModal(false);
+                  }
+                }} 
+                className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-all text-white font-bold"
+              >
+                Delete
+              </button>
+              <button 
+                onClick={() => setShowEditEventModal(false)} 
+                className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all text-white font-bold"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
