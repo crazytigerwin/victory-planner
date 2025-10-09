@@ -808,8 +808,16 @@ export default function VictoryPlanner() {
                         −
                       </button>
                       <div className="text-center">
-                        <div className="text-4xl font-bold" style={{ color: '#FF6200' }}>{goal.current}</div>
-                        <div className="text-sm text-gray-300">of {goal.target}</div>
+<input
+  type="number"
+  value={goal.current}
+  onChange={(e) => setGoalProgressDirectly(goal.id, e.target.value)}
+  className="w-24 text-4xl font-bold text-center bg-transparent border-b-2 border-orange-500 focus:outline-none"
+  style={{ color: '#FF6200' }}
+  min="0"
+  max={goal.target}
+/>
+<div className="text-sm text-gray-300 mt-2">of {goal.target}</div>
                       </div>
                       <button 
                         onClick={() => updateGoalProgress(goal.id, 1)}
