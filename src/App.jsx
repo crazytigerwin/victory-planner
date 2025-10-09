@@ -41,6 +41,14 @@ export default function VictoryPlanner() {
   const [syncCode, setSyncCode] = useState('');
   const [inputSyncCode, setInputSyncCode] = useState('');
 
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const formatTaskDate = (dateString) => {
     const [year, month, day] = dateString.split('-');
     const date = new Date(year, month - 1, day);
@@ -727,7 +735,7 @@ export default function VictoryPlanner() {
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em'
                       }}>
-                        DUE: {new Date(task.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase()}
+                        DUE: {formatTaskDate(task.date)}
                       </span>
                     </div>
                   </div>
