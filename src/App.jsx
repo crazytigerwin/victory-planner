@@ -234,10 +234,29 @@ export default function VictoryPlanner() {
     return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  const changeMonth = (direction) => {
+const changeMonth = (direction) => {
     const newDate = new Date(currentDate);
-    newDate.setMonth(currentDate.getMonth() + direction);
+    if (calendarView === 'month') {
+      newDate.setMonth(currentDate.getMonth() + direction);
+    } else if (calendarView === 'week') {
+      newDate.setDate(currentDate.getDate() + (direction * 7));
+    } else if (calendarView === 'day') {
+      newDate.setDate(currentDate.getDate() + direction);
+    }
     setCurrentDate(newDate);
+  };
+
+  const getWeekDates = () => {
+    const startOfWeek = new Date(currentDate);
+    startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+    
+    const weekDates = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(startOfWeek);
+      date.setDate(startOfWeek.getDate() + i);
+      weekDates.push(date);
+    }
+    return weekDates;
   };
 
   const openDayModal = (dayNum) => {
@@ -1056,7 +1075,69 @@ export default function VictoryPlanner() {
             </div>
           </div>
         )}
+{calendarView === 'week' && (
+                <div className="grid grid-cols-7 gap-2">
+                  {getWeekDates().map((date, idx) => {
+                    const isToday = date.toDateString() === new Date().toDateString();
+                    const dayEvents = events.filter(e => e.date === date.toISOString().split('T')[0]);
+                    
+                    return (
+                      <div key={idx} className={`p-2 rounded-lg ${isToday ? 'ring-2 ring-orange-500' : ''} bg-black/20`}>
+                        <div className="text-center mb-2">
+                          <div className="text-xs font-bold text-white">{date.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}</div>
+                          <div className={`text-2xl font-bold ${isToday ? 'text-orange-500' : 'text-white'}`}>{date.getDate()}</div>
+                        </div>
+                        <div className="space-y-1">
+                          {dayEvents.map(event => (
+                            <div 
+                              key={event.id}
+                              onClick={(e) => openEditEventModal(event, e)}
+                              className="text-xs p-2 rounded cursor-pointer hover:opacity-80 transition-opacity"
+                              style={{ backgroundColor: event.fromGoogle ? '#10B981' : '#FF6200' }}
+                            >
+                              {event.time && <div className="font-bold">{event.time}</div>}
+                              <div className="truncate">{event.title}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
+              {calendarView === 'day' && (
+                <div className="space-y-3">
+                  {events.filter(e => e.date === currentDate.toISOString().split('T')[0])
+                    .sort((a, b) => (a.time || '').localeCompare(b.time || ''))
+                    .map(event => (
+                      <div 
+                        key={event.id}
+                        onClick={(e) => openEditEventModal(event, e)}
+                        className="bg-black/30 rounded-lg p-4 border border-orange-500/20 cursor-pointer hover:bg-black/40 transition-all"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h4 className="text-xl font-bold text-white mb-2">{event.title}</h4>
+                            {event.time && (
+                              <p className="text-orange-300 mb-1">
+                                <span className="font-bold">🕐 {event.time}</span>
+                              </p>
+                            )}
+                            {event.fromGoogle && (
+                              <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: '#10B981' }}>
+                                FROM GOOGLE CALENDAR
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  {events.filter(e => e.date === currentDate.toISOString().split('T')[0]).length === 0 && (
+                    <p className="text-gray-400 text-center py-8">No events for this day</p>
+                  )}
+                </div>
+              )}
         {activeTab === 'notes' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-300px)]">
             <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-orange-500/20 overflow-hidden flex flex-col">
