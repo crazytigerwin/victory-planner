@@ -1,0 +1,187 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap');
+
+.App {
+  text-align: center;
+  padding: 20px;
+  background-image: url('https://images.unsplash.com/photo-1647100485736-0c415dc6796b?q=80&w=1287&auto=format&fit=crop&ixlib=rb-4.1.0');
+  background-size: cover;
+  background-position: center;
+  font-family: 'Montserrat', sans-serif;
+  color: white;
+}
+
+h1 {
+  font-weight: 700;
+  font-size: 3rem;
+  margin-bottom: 5px;
+}
+
+.title-divider {
+  height: 4px;
+  width: 100%;
+  background-color: #FF6200;
+  margin-bottom: 20px;
+}
+
+.top-nav {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+}
+
+.top-nav span {
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+.nav-divider {
+  width: 2px;
+  background-color: #FF6200;
+}
+
+.shaded {
+  background-color: rgba(0,0,0,0.5);
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.centered {
+  text-align: center;
+}
+
+h2 {
+  margin-top: 40px;
+  margin-bottom: 20px;
+  font-size: 2rem;
+}
+
+.fc {
+  max-width: 95%;
+  margin: 0 auto;
+  background-color: transparent;
+  color: white;
+}
+
+.fc-toolbar.fc-header-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.fc-button {
+  background-color: #FF6200 !important;
+  border: none !important;
+  color: white !important;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 0 3px;
+}
+
+.fc-button:hover {
+  background-color: #e55a00 !important;
+}
+
+.controls-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.text-input, .notes-area {
+  padding: 10px;
+  border-radius: 5px;
+  border: none;
+  font-weight: bold;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.notes-area {
+  width: 80%;
+  resize: none;
+}
+
+.primary {
+  background-color: #FF6200;
+  color: white;
+  font-weight: bold;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.primary:hover {
+  background-color: #e55a00;
+}
+
+.list-row {
+  background-color: rgba(0,0,0,0.5);
+  padding: 5px 10px;
+  margin: 5px;
+  border-radius: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.delete {
+  background-color: #FF6200;
+  border: none;
+  color: white;
+  padding: 3px 6px;
+  font-weight: bold;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.delete:hover {
+  background-color: #e55a00;
+}
+
+.section-divider {
+  height: 2px;
+  width: 90%;
+  margin: 40px auto;
+  background-color: #FF6200;
+}
+
+/* Modal styling */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right:0;
+  bottom:0;
+  background-color: rgba(0,0,0,0.95); /* fully opaque */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background-color: #111; /* opaque dark modal */
+  padding: 20px;
+  border-radius: 10px;
+  width: 300px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 1001;
+}
+
+.modal input, .modal textarea {
+  width: 100%;
+  padding: 5px;
+  border-radius: 5px;
+  border: none;
+  font-weight: bold;
+  font-family: 'Montserrat', sans-serif;
+}
