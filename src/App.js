@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Target, CheckSquare, BookOpen, TrendingUp, Plus, Trash2, MapPin, Clock } from 'lucide-react';
 
-// localStorage-based storage (replaces Supabase for now)
+// localStorage-based storage
 const storage = {
   get: (key) => {
     try {
@@ -75,23 +75,11 @@ const getUserId = () => {
   return userId;
 };
 
-// Mock Google Calendar functions
-const initGoogleCalendar = () => Promise.resolve();
-const signIn = () => Promise.resolve();
-const signOut = () => Promise.resolve();
-const isSignedIn = () => false;
-const getEvents = (start, end) => Promise.resolve({ result: { items: [] } });
-const createEvent = (event) => Promise.resolve();
-const deleteGoogleEvent = (id) => Promise.resolve();
-
 export default function VictoryPlanner() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [isGoogleSignedIn, setIsGoogleSignedIn] = useState(false);
-  const [isGoogleInitialized, setIsGoogleInitialized] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
   const [showDayModal, setShowDayModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   
   const userId = getUserId();
   
@@ -116,7 +104,6 @@ export default function VictoryPlanner() {
   const [newEvent, setNewEvent] = useState({ title: '', date: '', startTime: '', endTime: '', isAllDay: false, location: '' });
   const [journalText, setJournalText] = useState('');
   const [todayMood, setTodayMood] = useState('');
-  const [syncToGoogle, setSyncToGoogle] = useState(true);
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [syncCode, setSyncCode] = useState('');
   const [inputSyncCode, setInputSyncCode] = useState('');
@@ -185,25 +172,8 @@ export default function VictoryPlanner() {
     }
   };
 
-  useEffect(() => {
-    initGoogleCalendar()
-      .then(() => {
-        setIsGoogleInitialized(true);
-        setIsGoogleSignedIn(isSignedIn());
-      })
-      .catch(error => {
-        console.error('Failed to initialize Google Calendar:', error);
-      });
-  }, []);
-
-  useEffect(() => {
-    loadAllData();
-  }, []);
-
   const loadAllData = async () => {
     try {
-      setIsLoading(true);
-      
       const { data: goalsData } = await supabase.from('goals').select('*').eq('user_id', userId);
       if (goalsData) setGoals(goalsData);
 
@@ -221,32 +191,14 @@ export default function VictoryPlanner() {
 
       const { data: notesData } = await supabase.from('notes').select('*').eq('user_id', userId);
       if (notesData) setNotes(notesData);
-
     } catch (error) {
       console.error('Error loading data:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    try {
-      await signIn();
-      setIsGoogleSignedIn(true);
-    } catch (error) {
-      console.error('Sign in failed:', error);
-      alert('Failed to sign in to Google Calendar');
-    }
-  };
-
-  const handleGoogleSignOut = async () => {
-    try {
-      await signOut();
-      setIsGoogleSignedIn(false);
-    } catch (error) {
-      console.error('Sign out failed:', error);
-    }
-  };
+  useEffect(() => {
+    loadAllData();
+  }, []);
 
   const formatDate = (date) => {
     return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -778,7 +730,7 @@ export default function VictoryPlanner() {
           </div>
         )}
 
-        {activeTab === 'goals' && (
+{activeTab === 'goals' && (
           <div>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-3xl font-bold" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>GOALS</h2>
@@ -931,7 +883,7 @@ export default function VictoryPlanner() {
           </div>
         )}
 
-        {activeTab === 'calendar' && (
+{activeTab === 'calendar' && (
           <div>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-3xl font-bold" style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>CALENDAR</h2>
