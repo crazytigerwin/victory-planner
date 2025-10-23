@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Target, CheckSquare, BookOpen, TrendingUp, Plus, Trash2, MapPin, Clock } from 'lucide-react';
 
+/* eslint-disable react-hooks/exhaustive-deps */
+
 // localStorage-based storage
 const storage = {
+  ...
   get: (key) => {
     try {
       const data = localStorage.getItem(`victory_planner_${key}`);
@@ -196,16 +199,12 @@ export default function VictoryPlanner() {
     }
   };
 useEffect(() => {
-    loadAllData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  loadAllData();
+}, []);
 
-  const formatDate = (date) => {
-    return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  };
-  }, []);
-
-  const formatDate = (date) => {
+const formatDate = (date) => {
+  return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+};
     return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   };
 
