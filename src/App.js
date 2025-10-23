@@ -5,7 +5,7 @@ import { Target, CheckSquare, BookOpen, TrendingUp, Plus, Trash2, MapPin, Clock 
 
 // localStorage-based storage
 const storage = {
-  ...
+  
   get: (key) => {
     try {
       const data = localStorage.getItem(`victory_planner_${key}`);
