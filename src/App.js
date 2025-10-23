@@ -130,28 +130,27 @@ export default function VictoryPlanner() {
 
   const categoryOptions = ['Health & Fitness', 'Career', 'Finance', 'Personal Growth', 'Relationships', 'Education', 'Creativity', 'Travel', 'Other'];
 
-  const generateSyncCode = () => {
-    // Export ALL data as a base64 encoded string
-    const allData = {
-      userId: userId,
-      goals: goals,
-      tasks: tasks,
-      habits: habits,
-      journalEntries: journalEntries,
-      events: events,
-      notes: notes
-    };
-    const dataString = JSON.stringify(allData);
-    const encoded = btoa(dataString);
-    setSyncCode(encoded);
-    setShowSyncModal(true);
+ const generateSyncCode = () => {
+  const allData = {
+    userId: userId,
+    goals: goals,
+    tasks: tasks,
+    habits: habits,
+    journalEntries: journalEntries,
+    events: events,
+    notes: notes
   };
+  const dataString = JSON.stringify(allData);
+  const encoded = btoa(encodeURIComponent(dataString));
+  setSyncCode(encoded);
+  setShowSyncModal(true);
+};
 
   const applySyncCode = async () => {
     if (inputSyncCode.trim()) {
       try {
         // Decode and import the data
-        const decoded = atob(inputSyncCode.trim());
+const decoded = decodeURIComponent(atob(inputSyncCode.trim()));
         const importedData = JSON.parse(decoded);
         
         // Set the user ID
