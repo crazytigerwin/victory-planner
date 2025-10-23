@@ -195,12 +195,14 @@ export default function VictoryPlanner() {
       console.error('Error loading data:', error);
     }
   };
+useEffect(() => {
+    loadAllData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  useEffect(() => {
-    loadAllData()useEffect(() => {
-  loadAllData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, []);;
+  const formatDate = (date) => {
+    return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  };
   }, []);
 
   const formatDate = (date) => {
